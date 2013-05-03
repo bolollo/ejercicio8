@@ -1,11 +1,14 @@
-//Definimos la variable map
+﻿//Definimos la variable map
 var map;
+var elemento_activo;
+var popup;
+var capaEdicion;
 
 function init() {
 	//Asigamos la ruta para el archivo Proxy
 	OpenLayers.ProxyHost = "../proxy/proxy2.jsp?url=";
 
-	//Sobrescribir el m�todo para manejar multiples SRS.
+	//Sobrescribir el método para manejar multiples SRS.
 	OpenLayers.Layer.WMS.prototype.getFullRequestString = function(newParams, altUrl) {
 		var projectionCode = this.map.getProjection();
 		if (this.params.SRS){
@@ -41,8 +44,71 @@ function init() {
 	//Agregamos la capa creada al mapa
 	map.addLayer(osm_layer);
 	
+	//defnimos el estilo para los puntos
+	var style = new OpenLayers.Style(
+        // el primer argumento es un simbolo base
+        // todos los otros estilo basados en la reglas extienden este estilo
+        {
+            graphicWidth: 21,
+            graphicHeight: 25,
+            graphicYOffset: -28 //movemos la imagen 28 pixels hacia arriba
+        },
+        // el segundo argumento incluye todo las reglas de estilo
+        {
+            rules: [
+                new OpenLayers.Rule({
+                    // a rule contains an optional filter
+                    filter: new OpenLayers.Filter.Comparison({
+                        type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                        property: "tipo", // el atributo "tipo" de elemento es el que se usa para hacer la comparación
+                        value: 'accidente'
+                    }),
+                    // si el elemento cumple con el filotr de usa el siguiente symbolizer
+                    symbolizer: {
+                        externalGraphic: "img/caraccident.png"
+                    }
+                }),
+                new OpenLayers.Rule({
+                    filter: new OpenLayers.Filter.Comparison({
+                        type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                        property: "tipo",
+                        value: 'mobiliario'
+                    }),
+                    symbolizer: {
+                        externalGraphic: "img/picnic-2.png"
+                    }
+                }),
+                new OpenLayers.Rule({
+                    filter: new OpenLayers.Filter.Comparison({
+                        type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                        property: "tipo",
+                        value: 'contenedor'
+                    }),
+                    symbolizer: {
+                        externalGraphic: "img/recycle.png"
+                    }
+                }),
+                new OpenLayers.Rule({
+                    // apply this rule if no others apply
+                    elseFilter: true,
+                    symbolizer: {
+                        externalGraphic: "img/comment-map-icon.png"
+                    }
+                })
+            ]
+        }
+    );
+	
+	
+	
+	
 	//Creamos la capa de tipo Vector donde editaremos
-	var capaEdicion =  new OpenLayers.Layer.Vector("Editable");
+	capaEdicion =  new OpenLayers.Layer.Vector("Editable", {
+        styleMap: new OpenLayers.StyleMap(style)
+    });
+	
+	//registramos el evento featureadded para detectar cuando se agregar un elemento a la capa
+	capaEdicion.events.register('featureadded', capaEdicion, agregarElemento);
 	
 	//Agregamos la capa creada al mapa
 	map.addLayer(capaEdicion);
@@ -128,4 +194,38 @@ function agregarWMS(url, capa){
 
 function ocultarAddwms(){
 	document.getElementById('addwms').style.display = 'none';
+}
+
+function agregarElemento(evento){
+	var feature = evento.feature;
+	elemento_activo = feature;
+	var form = "<FORM>"+
+	"<H2><b>ATRIBUTOS DEL ELEMENTO</b></h2>\n" +
+	"Tipo de incidente: <br/> \n" +
+	"Tipo:<select id='tipo'>\n"+
+	"<option value='accidente'>Accidentes de tráfico</option>\n"+
+	"<option value='mobiliario'>Mobiliario urbano en mal estado</option>\n"+
+	"<option value='contenedor'>Contenedor de basura lleno</option>\n"+
+	"<option value='otros'>Otros</option>\n"+
+	"</select><br/>\n" +
+	"<input type='button' value='Guardar' onclick='guardarElemento()'><br/>\n" +
+	"</FORM>";
+	popup = new OpenLayers.Popup.FramedCloud(
+		"Info vec",
+		feature.geometry.getBounds().getCenterLonLat(),
+		null,
+		form,
+		null, 
+		true 
+	);
+	feature.popup = popup;
+	map.addPopup(popup);
+}
+
+function guardarElemento(){
+	var feature = elemento_activo;
+	feature.attributes.tipo = document.getElementById('tipo').value;
+	capaEdicion.redraw();
+	feature.popup = null;
+	map.removePopup(popup);
 }

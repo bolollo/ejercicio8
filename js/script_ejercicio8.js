@@ -60,14 +60,32 @@ function init() {
         displayClass: 'olControlDrawFeaturePoint'
     });
 	
-	barraControles.addControls([navigation, controlPunto]);
+	var controlAddWms = new OpenLayers.Control({
+		type: OpenLayers.Control.TYPE_BUTTON,
+		trigger: function() {
+			//mostramos el div que contiene el formulario para agregar el WMS 
+			document.getElementById('addwms').style.display = 'block';			
+		},
+		displayClass: 'addWms'
+	});
+	
+	barraControles.addControls([navigation, controlPunto, controlAddWms]);
 	
 	map.addControl(barraControles);
 	
+	map.setCenter(
+		new OpenLayers.LonLat(1.1406, 41.6485).transform(
+			new OpenLayers.Projection("EPSG:4326"),
+			map.getProjectionObject()
+		), 14
+	);
+}
+
+function leerCapabilitiesWMS(){
+	var url = document.getElementById('wmsurl').value;
 	var format = new OpenLayers.Format.WMSCapabilities();
-		
 	OpenLayers.Request.GET({
-        url: "http://shagrat.icc.es/lizardtech/iserv/ows?",
+        url: url,
         params: {
             SERVICE: "WMS",
             VERSION: "1.1.1",
@@ -83,25 +101,31 @@ function init() {
 			console.debug(capabilities.capability);
 			
 			//en este caso estamos agregando la primera capa del WMS 
-			var orto5 = new OpenLayers.Layer.WMS( "ICC ORTO5",
-				"http://shagrat.icc.es/lizardtech/iserv/ows?", 
-					{layers: capabilities.capability.layers[0].name, srs:'EPSG:4326', format:'image/png', 
-				transparent:'true', exceptions:"application/vnd.ogc.se_xml"},
-					{'isBaseLayer':false, 'displayInLayerSwitcher':true}
-			);
-			map.addLayer(orto5);
+			//aqui lo ideal es que se muestre el listado de capas al usuario puede ser un select y que este seleccione cual capa agregar.
+			//Desde el select se debe llamar a la funcion de agregarWMS.
+			agregarWMS(url,capabilities.capability.layers[0].name);
+			
         },
         failure: function() {
-            alert("Trouble getting capabilities doc");
+            alert("Problemas leer capabilities doc");
             OpenLayers.Console.error.apply(OpenLayers.Console, arguments);
         }
     });
 	
-	
-	map.setCenter(
-		new OpenLayers.LonLat(1.1406, 41.6485).transform(
-			new OpenLayers.Projection("EPSG:4326"),
-			map.getProjectionObject()
-		), 14
+}
+
+function agregarWMS(url, capa){
+	var orto5 = new OpenLayers.Layer.WMS( "ICC ORTO5",
+		url, 
+			{layers: capa, srs:'EPSG:4326', format:'image/png', 
+		transparent:'true', exceptions:"application/vnd.ogc.se_xml"},
+			{'isBaseLayer':false, 'displayInLayerSwitcher':true}
 	);
+	map.addLayer(orto5);
+
+	ocultarAddwms();		
+}
+
+function ocultarAddwms(){
+	document.getElementById('addwms').style.display = 'none';
 }

@@ -15,6 +15,11 @@
   <div id="header">header</div>
   <div id="content">
     <div id="map"></div>
+	<div id="addwms">
+		<input type="text" id="wmsurl" value="http://shagrat.icc.es/lizardtech/iserv/ows?"><br/><br/>
+		<input type="button" value="Agregar" onclick="leerCapabilitiesWMS()">&nbsp;&nbsp;&nbsp;&nbsp;
+		<input type="button" value="Cancelar" onclick="ocultarAddwms()">
+	</div>
   </div>
   <div id="footer">footer</div>
 </body>

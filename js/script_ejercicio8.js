@@ -6,7 +6,7 @@ var capaEdicion;
 
 function init() {
 	//Asigamos la ruta para el archivo Proxy
-	OpenLayers.ProxyHost = "../proxy/proxy2.jsp?url=";
+	OpenLayers.ProxyHost = "/cgi-bin/proxy.cgi?url=";
 
 	//Sobrescribir el método para manejar multiples SRS.
 	OpenLayers.Layer.WMS.prototype.getFullRequestString = function(newParams, altUrl) {

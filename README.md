@@ -15,3 +15,5 @@ Por defecto en el campo donde el usuario debe poner la url del WMS he agregado l
 Herramienta de edición de puntos de incidencias.
 En el formulario que se muestra en esta herramienta solo he agregado el campo de tipo de incidencia
 ya que es el que utilizaremos para pintar los elementos. Este formulario se debe ampliar con más información. 
+
+En el ejemplo la capa nueva de WMS queda sobre la capa de incidencias y al ser una capa opaca si está activada no se ven los puntos de incidencias. En la aplicación final la capa de incidencias simempre debe quedar sobre las capas WMS.
